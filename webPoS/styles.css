@@ -1,0 +1,146 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sticky-cart {
+    position: sticky;
+    top: 80px;
+}
+
+.product-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.product-image-container {
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    overflow: hidden;
+    position: relative;
+    font-size: 4rem;
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholder-icon {
+    color: #dee2e6;
+}
+
+.cart-item-image-container,
+.management-thumb-container {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    font-size: 1.5rem;
+}
+
+.cart-item-image,
+.management-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.management-thumb-container {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+    border-radius: 4px;
+}
+
+#cartItems::-webkit-scrollbar {
+    width: 6px;
+}
+
+#cartItems::-webkit-scrollbar-thumb {
+    background-color: #dee2e6;
+    border-radius: 10px;
+}
+
+/* Custom styling for navbar pills to look cleaner */
+.nav-pills .nav-link {
+    border-radius: 20px;
+    padding: 8px 20px;
+    margin-left: 5px;
+    transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    font-weight: 600;
+}
+
+.nav-link:hover:not(.active) {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.filter-pill {
+    padding: 8px 18px;
+    border-radius: 50px;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    user-select: none;
+}
+
+.filter-pill:hover {
+    border-color: #0d6efd;
+    color: #0d6efd;
+    background-color: #f8f9fa;
+}
+
+.filter-pill.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.2);
+}
+
+@media (max-width: 991.98px) {
+    .sticky-cart {
+        position: static;
+    }
+}
+
+/* Checkout Modal Styles */
+.qr-container {
+    transition: transform 0.3s ease;
+}
+
+.qr-container:hover {
+    transform: scale(1.05);
+}
+
+.rounded-4 {
+    border-radius: 1.25rem !important;
+}
+
+.ls-1 {
+    letter-spacing: 1px;
+}
+
+.bg-primary.bg-opacity-10 {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+}
