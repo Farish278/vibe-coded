@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedDateDisplay = document.getElementById('selected-date-display');
     const nextPrayerCountdown = document.getElementById('next-prayer-countdown');
     const shareBtn = document.getElementById('shareBtn');
-    const shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
+    // const shareModal = new bootstrap.Modal(document.getElementById('shareModal')); // Using data-bs-toggle for mobile compatibility
     const shareCanvas = document.getElementById('shareCanvas');
     const shareImageContainer = document.getElementById('shareImageContainer');
     const downloadShareImg = document.getElementById('downloadShareImg');
@@ -260,8 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCalendar();
     });
 
-    shareBtn.addEventListener('click', () => {
-        shareModal.show();
+    document.getElementById('shareModal').addEventListener('shown.bs.modal', () => {
         generateShareImage();
     });
 
