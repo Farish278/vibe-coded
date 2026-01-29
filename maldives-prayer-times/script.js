@@ -63,6 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(err => console.error('Error loading prayer data:', err));
 
     function initApp() {
+        // Set current year in footer
+        document.getElementById('current-year').innerText = new Date().getFullYear();
+
         const savedSettings = localStorage.getItem('mvPrayerSettings');
         if (savedSettings) {
             const settings = JSON.parse(savedSettings);

@@ -183,7 +183,7 @@ body {
 }
 
 .calendar-day:hover:not(.empty) {
-    background-color: rgba(98, 0, 238, 0.1);
+    background-color: rgba(128, 128, 128, 0.15);
 }
 
 .calendar-day.today {
