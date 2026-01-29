@@ -1,0 +1,290 @@
+:root {
+    --primary-color: #6200ee;
+    --primary-variant: #3700b3;
+    --secondary-color: #03dac6;
+    --background-color: #f5f5f5;
+    --surface-color: #ffffff;
+    --on-surface-color: rgba(0, 0, 0, 0.87);
+    --border-color: rgba(0, 0, 0, 0.12);
+}
+
+[data-bs-theme="dark"] {
+    --background-color: #121212;
+    --surface-color: #1e1e1e;
+    --on-surface-color: rgba(255, 255, 255, 0.87);
+    --border-color: rgba(255, 255, 255, 0.12);
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    color: var(--on-surface-color);
+    transition: background-color 0.3s, color 0.3s;
+    min-height: 100vh;
+}
+
+.material-card {
+    border-radius: 12px;
+    background-color: var(--surface-color);
+    transition: transform 0.2s;
+}
+
+.list-group-item {
+    padding: 1.25rem 0;
+    border-color: var(--border-color);
+    background-color: transparent;
+    color: inherit;
+}
+
+.prayer-active-container {
+    position: relative;
+    border-radius: 12px;
+    margin: 0.75rem -0.75rem;
+    padding: 0.75rem 1rem;
+}
+
+.prayer-active-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--primary-color);
+    opacity: 0.12;
+    border-radius: 12px;
+    z-index: 0;
+}
+
+.prayer-time-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.prayer-active-container .prayer-name,
+.prayer-active-container .prayer-time {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.prayer-name {
+    font-weight: 500;
+}
+
+.prayer-time {
+    font-weight: 400;
+    color: var(--primary-color);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.show>.btn-primary.dropdown-toggle {
+    background-color: var(--primary-variant) !important;
+    border-color: var(--primary-variant) !important;
+    box-shadow: 0 0 0 0.25rem rgba(var(--primary-rgb, 98, 0, 238), 0.25) !important;
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.nav-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0 !important;
+}
+
+.nav-btn span {
+    font-size: 1.25rem;
+}
+
+.disabled-pill {
+    pointer-events: none;
+    opacity: 1 !important;
+    border-width: 1px;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+}
+
+/* Modal Styling */
+.modal-content {
+    border-radius: 20px;
+    background-color: var(--surface-color);
+    color: var(--on-surface-color);
+}
+
+.form-select,
+.form-control {
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    background-color: var(--surface-color);
+    color: var(--on-surface-color);
+}
+
+.form-select:focus,
+.form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(98, 0, 238, 0.25);
+    border-color: var(--primary-color);
+}
+
+/* Calendar Styling */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+}
+
+.calendar-day-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    padding: 8px 0;
+    text-transform: uppercase;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    position: relative;
+}
+
+.calendar-day:hover:not(.empty) {
+    background-color: rgba(98, 0, 238, 0.1);
+}
+
+.calendar-day.today {
+    border: 2px solid var(--primary-color);
+    font-weight: 700;
+}
+
+.calendar-day.selected {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.calendar-day.empty {
+    cursor: default;
+}
+
+/* Redefine astronomy list for horizontal layout */
+#astronomy-list .astronomy-item {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+#astronomy-list .astronomy-icon {
+    margin-right: 0;
+    margin-bottom: 8px;
+    font-size: 28px;
+}
+
+.moon-phase-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 1.5rem;
+}
+
+.moon-svg-container {
+    width: 80px;
+    height: 80px;
+    background: #ffffff;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 0.75rem;
+    transition: background-color 0.3s;
+}
+
+[data-bs-theme="dark"] .moon-svg-container {
+    background: #000000;
+}
+
+.moon-svg-container svg {
+    width: 100%;
+    height: 100%;
+}
+
+.moon-lit {
+    fill: var(--primary-color);
+}
+
+/* Color Swatches */
+.color-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.color-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.color-swatch:hover {
+    transform: scale(1.1);
+}
+
+.color-swatch.active {
+    border-color: var(--on-surface-color);
+    box-shadow: 0 0 0 2px var(--surface-color) inset;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.material-card {
+    animation: fadeIn 0.5s ease-out;
+}
