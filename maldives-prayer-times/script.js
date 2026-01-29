@@ -127,10 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedDateDisplay.title = selectedDate.toLocaleDateString(undefined, dateOptions);
 
         // Get Day of Year for Prayer Times
-        const start = new Date(selectedDate.getFullYear(), 0, 0);
-        const diff = selectedDate - start;
-        const oneDay = 1000 * 60 * 60 * 24;
-        const dayOfYear = Math.floor(diff / oneDay);
+        const dayOfYear = getDayOfYear(selectedDate);
 
         const atollTimes = prayerData.atolls[selectedIsland.atollId];
         const dayTimes = atollTimes.find(t => t.day === dayOfYear) || atollTimes[0];
@@ -332,19 +329,28 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatTime(totalMinutes) {
         let h = Math.floor(totalMinutes / 60);
         let m = totalMinutes % 60;
+        return formatTimeHelper(h, m);
+    }
+
+    function formatJSDate(date) {
+        let h = date.getHours();
+        let m = date.getMinutes();
+        return formatTimeHelper(h, m);
+    }
+
+    function formatTimeHelper(h, m) {
         if (use24Hour) return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
         const ampm = h >= 12 ? 'PM' : 'AM';
         h = h % 12 || 12;
         return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
     }
 
-    function formatJSDate(date) {
-        let h = date.getHours();
-        let m = date.getMinutes();
-        if (use24Hour) return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        h = h % 12 || 12;
-        return `${h}:${String(m).padStart(2, '0')} ${ampm}`;
+    function getDayOfYear(date) {
+        const now = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const start = new Date(Date.UTC(date.getFullYear(), 0, 0));
+        const diff = now - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        return Math.floor(diff / oneDay);
     }
 
     function populateAtolls() {
