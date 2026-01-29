@@ -25,10 +25,15 @@
                     Detecting...
                 </p>
             </div>
-            <button class="btn btn-outline-primary btn-sm rounded-pill d-flex align-items-center mt-1"
-                data-bs-toggle="modal" data-bs-target="#settingsModal">
-                <span class="material-icons me-1" style="font-size: 18px;">settings</span> Settings
-            </button>
+            <div class="d-flex gap-2 mt-1">
+                <button class="btn btn-outline-primary btn-sm rounded-pill d-flex align-items-center" id="shareBtn">
+                    <span class="material-icons me-1" style="font-size: 18px;">share</span> Share
+                </button>
+                <button class="btn btn-outline-primary btn-sm rounded-pill d-flex align-items-center"
+                    data-bs-toggle="modal" data-bs-target="#settingsModal">
+                    <span class="material-icons me-1" style="font-size: 18px;">settings</span> Settings
+                </button>
+            </div>
         </header>
 
         <div class="row g-4">
@@ -149,6 +154,16 @@
                     </div>
 
                     <div class="mb-4">
+                        <label for="shareBgUpload" class="form-label fw-medium">Share Background</label>
+                        <div class="d-flex gap-2 mb-2">
+                            <input type="file" class="form-control rounded-pill" id="shareBgUpload" accept="image/*">
+                            <button class="btn btn-outline-secondary rounded-pill px-4" type="button"
+                                id="resetShareBg">Reset</button>
+                        </div>
+                        <div class="form-text small opacity-75">Upload a custom background for shareable cards.</div>
+                    </div>
+
+                    <div class="mb-4">
                         <label class="form-label fw-medium">Primary Color</label>
                         <div id="colorSwatches" class="color-swatches">
                             <!-- Populated by JS -->
@@ -172,6 +187,13 @@
                                 <a href="https://getbootstrap.com/" target="_blank"
                                     class="text-decoration-none">Bootstrap 5</a> (Framework)
                             </li>
+                            <li class="mt-1">
+                                Photo by <a
+                                    href="https://unsplash.com/@catauggie?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText"
+                                    target="_blank" class="text-decoration-none">SnapSaga</a> on <a
+                                    href="https://unsplash.com/photos/a-sunset-on-a-tropical-beach-with-palm-trees-sFfZrcEiqtc?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText"
+                                    target="_blank" class="text-decoration-none">Unsplash</a>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -184,6 +206,38 @@
             </div>
         </div>
     </div>
+
+    <!-- Share Modal -->
+    <div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title d-flex align-items-center" id="shareModalLabel">
+                        <span class="material-icons me-2">share</span> Share Prayer Times
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div id="shareImageContainer" class="mb-3">
+                        <!-- Canvas or Image will be inserted here -->
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <p class="text-muted small">Right-click or long-press the image to save or share.</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Close</button>
+                    <a id="downloadShareImg" href="#" download="maldives-prayer-times.png"
+                        class="btn btn-primary rounded-pill px-4">Download Image</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Canvas for Generation -->
+    <canvas id="shareCanvas" width="1024" height="1024" style="display:none;"></canvas>
 
     <!-- JavaScript Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

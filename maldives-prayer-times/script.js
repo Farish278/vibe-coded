@@ -23,6 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const darkModeToggle = document.getElementById('darkModeToggle');
     const colorSwatchesContainer = document.getElementById('colorSwatches');
+    const shareBgUpload = document.getElementById('shareBgUpload');
+    const resetShareBgBtn = document.getElementById('resetShareBg');
+
+    const DEFAULT_SHARE_BG = 'snapsaga-sFfZrcEiqtc-unsplash.jpg';
+    let customShareBg = localStorage.getItem('customShareBg') || null;
 
     let currentPrimaryColor = "#6200ee";
     const presetColors = [
@@ -39,6 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const todayBtn = document.getElementById('todayBtn');
     const selectedDateDisplay = document.getElementById('selected-date-display');
     const nextPrayerCountdown = document.getElementById('next-prayer-countdown');
+    const shareBtn = document.getElementById('shareBtn');
+    const shareModal = new bootstrap.Modal(document.getElementById('shareModal'));
+    const shareCanvas = document.getElementById('shareCanvas');
+    const shareImageContainer = document.getElementById('shareImageContainer');
+    const downloadShareImg = document.getElementById('downloadShareImg');
 
     settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
 
@@ -250,6 +260,234 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCalendar();
     });
 
+    shareBtn.addEventListener('click', () => {
+        shareModal.show();
+        generateShareImage();
+    });
+
+    function generateShareImage() {
+        if (!selectedIsland) return;
+
+        const ctx = shareCanvas.getContext('2d');
+        const bgImg = new Image();
+        bgImg.src = customShareBg || DEFAULT_SHARE_BG;
+
+        bgImg.onload = () => {
+            // Calculate Cover dimensions
+            const iw = bgImg.width;
+            const ih = bgImg.height;
+            const ratio = iw / ih;
+            const targetRatio = 1; // 1024 / 1024
+
+            let sx, sy, sWidth, sHeight;
+            if (ratio > targetRatio) {
+                sWidth = ih * targetRatio;
+                sHeight = ih;
+                sx = (iw - sWidth) / 2;
+                sy = 0;
+            } else {
+                sWidth = iw;
+                sHeight = iw / targetRatio;
+                sx = 0;
+                sy = (ih - sHeight) / 2;
+            }
+
+            // 1. Draw Background with Faded Filter (Cover)
+            ctx.save();
+            ctx.filter = 'brightness(1.1) contrast(0.8) saturate(0.5) sepia(0.2)';
+            ctx.drawImage(bgImg, sx, sy, sWidth, sHeight, 0, 0, 1024, 1024);
+            ctx.restore();
+
+            // 2. Draw Glassmorphic Overlay with Backdrop Blur
+            const marginX = 60;
+            const cardHeight = 780;
+            const marginY = (1024 - cardHeight) / 2 - 30;
+            const cardWidth = 1024 - (marginX * 2);
+            const r = 60; // Softer squirkle corners
+
+            const createRoundedRect = (c) => {
+                c.beginPath();
+                c.moveTo(marginX + r, marginY);
+                c.lineTo(marginX + cardWidth - r, marginY);
+                c.quadraticCurveTo(marginX + cardWidth, marginY, marginX + cardWidth, marginY + r);
+                c.lineTo(marginX + cardWidth, marginY + cardHeight - r);
+                c.quadraticCurveTo(marginX + cardWidth, marginY + cardHeight, marginX + cardWidth - r, marginY + cardHeight);
+                c.lineTo(marginX + r, marginY + cardHeight);
+                c.quadraticCurveTo(marginX, marginY + cardHeight, marginX, marginY + cardHeight - r);
+                c.lineTo(marginX, marginY + r);
+                c.quadraticCurveTo(marginX, marginY, marginX + r, marginY);
+                c.closePath();
+            };
+
+            ctx.save();
+            createRoundedRect(ctx);
+            ctx.clip();
+            ctx.filter = 'blur(5px) brightness(0.8) contrast(0.9) saturate(0.8)';
+            ctx.drawImage(bgImg, sx, sy, sWidth, sHeight, 0, 0, 1024, 1024);
+            ctx.restore();
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; // More translucent card
+            createRoundedRect(ctx);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+
+            // 3. Data Centering Logic
+            const contentTotalHeight = 650;
+            const contentStartY = marginY + (cardHeight - contentTotalHeight) / 2;
+            const bodyStartY = contentStartY + 210;
+
+            // Header Text (Premium White)
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 54px Roboto, sans-serif';
+            ctx.fillText(`${selectedIsland.atoll} ${selectedIsland.island}`.toUpperCase(), 512, contentStartY + 50);
+
+            const dateStr = selectedDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            ctx.font = '300 28px Roboto, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText(dateStr, 512, contentStartY + 95);
+
+            // Header Separator (Translucent White)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.beginPath();
+            ctx.moveTo(marginX + 80, contentStartY + 140);
+            ctx.lineTo(1024 - marginX - 80, contentStartY + 140);
+            ctx.stroke();
+
+            // 4. Two-Column Layout
+            const leftColX = marginX + 60;
+            const bodyHeight = 500;
+            const bodyCenterY = bodyStartY + (bodyHeight / 2);
+
+            // Vertical Separator (Translucent White)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.beginPath();
+            ctx.moveTo(512, bodyStartY - 30);
+            ctx.lineTo(512, bodyStartY + bodyHeight - 30); // Shortened for bottom margin
+            ctx.stroke();
+
+            // Left Column: Prayer Times
+            const colPadding = 40;
+            const prayerStartY = bodyCenterY - (bodyHeight / 2) + colPadding - 30; // Shifted up
+            const prayerInterval = (bodyHeight - colPadding * 2) / 4;
+
+            const dayOfYear = getDayOfYear(selectedDate);
+            const atollTimes = prayerData.atolls[selectedIsland.atollId];
+            const dayTimes = atollTimes.find(t => t.day === dayOfYear) || atollTimes[0];
+            const offset = selectedIsland.offset || 0;
+
+            let py = prayerStartY;
+            prayerNames.forEach((name, i) => {
+                if (name === "Sunrise") return;
+
+                const minutes = dayTimes[prayerKeys[i]] + offset;
+                const timeStr = formatTime(minutes);
+
+                ctx.textAlign = 'left';
+                ctx.font = '500 36px Roboto, sans-serif';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.fillText(name, leftColX, py);
+
+                ctx.textAlign = 'right';
+                ctx.font = 'bold 36px Roboto, sans-serif';
+                ctx.fillText(timeStr, 512 - 40, py);
+                py += prayerInterval;
+            });
+
+            // Right Column: Astronomy Grid
+            const lat = (selectedIsland && selectedIsland.location) ? selectedIsland.location.lat : 4.175;
+            const lon = (selectedIsland && selectedIsland.location) ? selectedIsland.location.long : 73.509;
+            const sunTimes = SunCalc.getTimes(selectedDate, lat, lon);
+            const moonTimes = SunCalc.getMoonTimes(selectedDate, lat, lon);
+            const moonIllum = SunCalc.getMoonIllumination(selectedDate);
+
+            const rcx = 512 + (1024 - marginX - 512) / 2;
+            const astroTotalHeight = 320; // Approx height from phase title to sun/moon set
+            const astroStartY = bodyCenterY - (astroTotalHeight / 2);
+
+            // 1. Moon Phase (Top)
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 32px Roboto, sans-serif';
+            ctx.fillText('🌗 Moon Phase', rcx, astroStartY);
+
+            const phase = moonIllum.phase;
+            let phaseName = "";
+            if (phase <= 0.03 || phase >= 0.97) phaseName = "New Moon";
+            else if (phase < 0.22) phaseName = "Waxing Crescent";
+            else if (phase < 0.28) phaseName = "First Quarter";
+            else if (phase < 0.47) phaseName = "Waxing Gibbous";
+            else if (phase < 0.53) phaseName = "Full Moon";
+            else if (phase < 0.72) phaseName = "Waning Gibbous";
+            else if (phase < 0.78) phaseName = "Last Quarter";
+            else phaseName = "Waning Crescent";
+
+            ctx.font = '400 24px Roboto, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fillText(phaseName, rcx, astroStartY + 125); // Moved down slightly
+
+            let sweep1 = phase <= 0.5 ? 1 : 0;
+            let sweep2 = (phase <= 0.25 || (phase > 0.5 && phase <= 0.75)) ? 0 : 1;
+            const mr = 40;
+            const mx = rcx;
+            const my = astroStartY + 60;
+            const xfactor = Math.cos(phase * 2 * Math.PI) * mr;
+
+            ctx.save();
+            ctx.translate(mx, my);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.beginPath(); ctx.arc(0, 0, mr, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.beginPath();
+            ctx.arc(0, 0, mr, Math.PI / 2, -Math.PI / 2, sweep1 === 0);
+            ctx.ellipse(0, 0, Math.abs(xfactor), mr, 0, -Math.PI / 2, Math.PI / 2, sweep2 === 1);
+            ctx.fill();
+            ctx.restore();
+
+            // 2. Sun and Moon Data (Bottom)
+            const subStartY = astroStartY + 230;
+            const subL = 512 + 100;
+            const subR = 1024 - marginX - 100;
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 28px Roboto, sans-serif';
+            ctx.fillText('☀️ Sun', subL, subStartY);
+
+            ctx.font = '400 22px Roboto, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText(`Rise: ${formatJSDate(sunTimes.sunrise)}`, subL, subStartY + 35);
+            ctx.fillText(`Set:  ${formatJSDate(sunTimes.sunset)}`, subL, subStartY + 65);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 28px Roboto, sans-serif';
+            ctx.fillText('🌙 Moon', subR, subStartY);
+
+            ctx.font = '400 22px Roboto, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillText(`Rise: ${moonTimes.rise ? formatJSDate(moonTimes.rise) : '--:--'}`, subR, subStartY + 35);
+            ctx.fillText(`Set:  ${moonTimes.set ? formatJSDate(moonTimes.set) : '--:--'}`, subR, subStartY + 65);
+
+            // Website Credit
+            ctx.textAlign = 'center';
+            ctx.font = '300 20px Roboto, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.fillText('Maldives Prayer Times | Farish278', 512, 1000);
+
+            const dataUrl = shareCanvas.toDataURL('image/png');
+            shareImageContainer.innerHTML = `<img src="${dataUrl}" class="img-fluid rounded" alt="Shareable Prayer Times">`;
+            downloadShareImg.href = dataUrl;
+        };
+
+        bgImg.onerror = () => {
+            shareImageContainer.innerHTML = '<div class="alert alert-danger">Error loading background image.</div>';
+        };
+    }
+
     // --- Color Swatches ---
     function renderColorSwatches() {
         colorSwatchesContainer.innerHTML = '';
@@ -376,6 +614,31 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             islandSelect.disabled = true;
         }
+    });
+
+    shareBgUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const dataUrl = event.target.result;
+                // Basic size check to prevent localStorage overflow (usually 5MB limit)
+                if (dataUrl.length > 3 * 1024 * 1024) {
+                    alert('Image is too large. Please select an image under 2MB.');
+                    shareBgUpload.value = '';
+                    return;
+                }
+                customShareBg = dataUrl;
+                localStorage.setItem('customShareBg', customShareBg);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    resetShareBgBtn.addEventListener('click', () => {
+        customShareBg = null;
+        localStorage.removeItem('customShareBg');
+        shareBgUpload.value = '';
     });
 
     saveSettingsBtn.addEventListener('click', () => {
