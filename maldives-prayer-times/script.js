@@ -237,10 +237,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     prevMonthBtn.addEventListener('click', () => {
+        currentCalendarDate.setDate(1);
         currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
         renderCalendar();
     });
     nextMonthBtn.addEventListener('click', () => {
+        currentCalendarDate.setDate(1);
         currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
         renderCalendar();
     });
