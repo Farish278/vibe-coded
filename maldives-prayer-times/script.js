@@ -317,7 +317,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const r = 50;
         let sweep1 = phase <= 0.5 ? 1 : 0;
-        let sweep2 = (phase <= 0.25 || phase >= 0.75) ? 0 : 1;
+        let sweep2;
+        if (phase <= 0.25) sweep2 = 0;
+        else if (phase <= 0.50) sweep2 = 1;
+        else if (phase <= 0.75) sweep2 = 0;
+        else sweep2 = 1;
         let xfactor = Math.cos(phase * 2 * Math.PI) * r;
         const path = `M 50 0 A 50 50 0 1 ${sweep1} 50 100 A ${Math.abs(xfactor)} 50 0 1 ${sweep2} 50 0`;
 
