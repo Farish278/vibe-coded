@@ -209,8 +209,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateDynamicManifest(hex) {
         if (!manifestTemplate) return;
 
-        // Update theme_color in the template
-        const dynamicManifest = { ...manifestTemplate, theme_color: hex };
+        const isDarkMode = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        const bgColor = isDarkMode ? '#121212' : '#ffffff';
+
+        // Update theme_color and background_color in the template
+        const dynamicManifest = {
+            ...manifestTemplate,
+            theme_color: hex,
+            background_color: bgColor
+        };
 
         // Create Blob and URL
         const blob = new Blob([JSON.stringify(dynamicManifest)], { type: 'application/json' });
