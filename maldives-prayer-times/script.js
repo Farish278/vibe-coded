@@ -178,8 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Load notification settings
             cachedNotificationSettings = settings.notifications || {};
-            cachedNotifBefore = settings.notifBefore || false;
-            cachedNotifBeforeMins = settings.notifBeforeMins || 15;
+            cachedIqamahToggles = settings.iqamahToggles || {};
+            cachedIqamahOffsets = settings.iqamahOffsets || { ...iqamahDefaults };
             initNotificationUI(cachedNotificationSettings);
 
             updateUI();
@@ -556,8 +556,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // Right Column: Astronomy Grid
-            const lat = (selectedIsland && selectedIsland.location) ? selectedIsland.location.lat : 4.175;
-            const lon = (selectedIsland && selectedIsland.location) ? selectedIsland.location.long : 73.509;
+            const lat = (selectedIsland && selectedIsland.location && selectedIsland.location.lat !== null) ? selectedIsland.location.lat : 4.175;
+            const lon = (selectedIsland && selectedIsland.location && selectedIsland.location.long !== null) ? selectedIsland.location.long : 73.509;
             const sunTimes = SunCalc.getTimes(selectedDate, lat, lon);
             const moonTimes = SunCalc.getMoonTimes(selectedDate, lat, lon);
             const moonIllum = SunCalc.getMoonIllumination(selectedDate);
@@ -682,8 +682,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Astronomy & Helpers ---
     function renderAstronomy(date) {
-        const lat = (selectedIsland && selectedIsland.location) ? selectedIsland.location.lat : 4.175;
-        const lon = (selectedIsland && selectedIsland.location) ? selectedIsland.location.long : 73.509;
+        const lat = (selectedIsland && selectedIsland.location && selectedIsland.location.lat !== null) ? selectedIsland.location.lat : 4.175;
+        const lon = (selectedIsland && selectedIsland.location && selectedIsland.location.long !== null) ? selectedIsland.location.long : 73.509;
 
         const sunTimes = SunCalc.getTimes(date, lat, lon);
         const moonTimes = SunCalc.getMoonTimes(date, lat, lon);
@@ -1110,4 +1110,34 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
         if (selectedDate.toDateString() === new Date().toDateString()) updateUI();
     }, 10000);
+
+    function updateDynamicManifest(color) {
+        const manifest = {
+            "name": "Maldives Prayer Times",
+            "short_name": "MV Prayer",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": color,
+            "theme_color": color,
+            "icons": [
+                {
+                    "src": "icon-192.png",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                },
+                {
+                    "src": "icon-512.png",
+                    "sizes": "512x512",
+                    "type": "image/png"
+                }
+            ]
+        };
+        const stringManifest = JSON.stringify(manifest);
+        const blob = new Blob([stringManifest], { type: 'application/json' });
+        const manifestURL = URL.createObjectURL(blob);
+        const manifestTag = document.querySelector('link[rel="manifest"]');
+        if (manifestTag) {
+            manifestTag.setAttribute('href', manifestURL);
+        }
+    }
 });
