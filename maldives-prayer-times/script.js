@@ -978,19 +978,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const childToggles = childrenContainer.querySelectorAll('.iqamah-child-toggle');
 
+        let isBatchUpdating = false;
         function updateMasterToggleState() {
+            if (isBatchUpdating) return;
             const checkedCount = Array.from(childToggles).filter(t => t.checked).length;
             masterToggle.checked = checkedCount === childToggles.length;
             masterToggle.indeterminate = checkedCount > 0 && checkedCount < childToggles.length;
         }
 
         masterToggle.addEventListener('change', () => {
+            const target = masterToggle.checked;
+            isBatchUpdating = true;
             childToggles.forEach(t => {
-                if (t.checked !== masterToggle.checked) {
-                    t.checked = masterToggle.checked;
+                if (t.checked !== target) {
+                    t.checked = target;
                     t.dispatchEvent(new Event('change'));
                 }
             });
+            isBatchUpdating = false;
+            updateMasterToggleState();
         });
 
         updateMasterToggleState();
