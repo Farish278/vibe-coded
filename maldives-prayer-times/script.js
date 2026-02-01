@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let cachedNotifBefore = false;
     let cachedNotifBeforeMins = 15;
     let lastCheckedMinute = -1;
+    let manifestTemplate = null;
+    let currentManifestUrl = null;
 
     let selectedDate = new Date();
     let currentCalendarDate = new Date(); // To track which month we are viewing in calendar
@@ -188,6 +190,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         renderCalendar();
         renderColorSwatches();
+        fetchManifestTemplate();
+    }
+
+    async function fetchManifestTemplate() {
+        try {
+            const response = await fetch('manifest.json');
+            manifestTemplate = await response.json();
+            // Apply current color to manifest immediately if we already have it
+            if (currentPrimaryColor) {
+                updateDynamicManifest(currentPrimaryColor);
+            }
+        } catch (err) {
+            console.error('Failed to fetch manifest template:', err);
+        }
+    }
+
+    function updateDynamicManifest(hex) {
+        if (!manifestTemplate) return;
+
+        // Update theme_color in the template
+        const dynamicManifest = { ...manifestTemplate, theme_color: hex };
+
+        // Create Blob and URL
+        const blob = new Blob([JSON.stringify(dynamicManifest)], { type: 'application/json' });
+        const newManifestUrl = URL.createObjectURL(blob);
+
+        // Update the manifest link in head
+        let manifestLink = document.querySelector('link[rel="manifest"]');
+        if (!manifestLink) {
+            manifestLink = document.createElement('link');
+            manifestLink.rel = 'manifest';
+            document.head.appendChild(manifestLink);
+        }
+
+        // Revoke old URL to save memory
+        if (currentManifestUrl) {
+            URL.revokeObjectURL(currentManifestUrl);
+        }
+
+        manifestLink.setAttribute('href', newManifestUrl);
+        currentManifestUrl = newManifestUrl;
     }
 
     function detectLocation() {
@@ -973,6 +1016,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (themeMeta) {
             themeMeta.setAttribute('content', hex);
         }
+
+        // Update dynamic manifest
+        updateDynamicManifest(hex);
     }
 
     // Check more frequently to trigger exactly when minute changes
