@@ -967,6 +967,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const darken = (c, amt) => Math.max(0, c - amt);
         const variant = `rgb(${darken(r, 20)}, ${darken(g, 20)}, ${darken(b, 20)})`;
         root.style.setProperty('--primary-variant', variant);
+
+        // Update PWA theme color meta tag
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta) {
+            themeMeta.setAttribute('content', hex);
+        }
     }
 
     // Check more frequently to trigger exactly when minute changes
