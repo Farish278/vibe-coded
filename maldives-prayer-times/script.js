@@ -909,12 +909,9 @@ document.addEventListener('DOMContentLoaded', () => {
         prayerNotifToggles.innerHTML = '';
         iqamahSettingsContainer.innerHTML = '';
 
-        const settings = JSON.parse(localStorage.getItem('mvPrayerSettings') || '{}');
-        const it = settings.iqamahToggles || {};
-        const io = settings.iqamahOffsets || { ...iqamahDefaults };
-
+        // Adhan (Adhan) Notifications Section
         prayerKeys.forEach((key, i) => {
-            const isEnabled = notifs[key] !== false; // Default true
+            const isEnabled = notifs[key] !== false;
             const row = document.createElement('div');
             row.className = 'form-check form-switch mb-2';
             row.innerHTML = `
@@ -922,35 +919,73 @@ document.addEventListener('DOMContentLoaded', () => {
                 <label class="form-check-label fw-medium" for="notif-${key}">${prayerNames[i]} Adhan</label>
             `;
             prayerNotifToggles.appendChild(row);
-
-            if (key !== 'sunrise') {
-                const iqEnabled = it[key] || false;
-                const iqMins = io[key] || iqamahDefaults[key];
-
-                const iqRow = document.createElement('div');
-                iqRow.className = 'mb-3 pb-2 border-bottom border-light';
-                iqRow.innerHTML = `
-                    <div class="form-check form-switch mb-1">
-                        <input class="form-check-input" type="checkbox" role="switch" id="iqamah-toggle-${key}" ${iqEnabled ? 'checked' : ''}>
-                        <label class="form-check-label small fw-medium text-muted" for="iqamah-toggle-${key}">${prayerNames[i]} Iqamah Reminder</label>
-                    </div>
-                    <div class="ps-4 mt-1" id="iqamah-container-${key}" style="display: ${iqEnabled ? 'block' : 'none'}">
-                        <div class="d-flex align-items-center gap-2">
-                            <input type="number" id="iqamah-offset-${key}" class="form-control form-control-sm rounded-pill" style="width: 60px;" value="${iqMins}" min="1" max="60">
-                            <span class="small text-muted">mins after Adhan</span>
-                        </div>
-                    </div>
-                `;
-                iqamahSettingsContainer.appendChild(iqRow);
-
-                const iqToggle = iqRow.querySelector(`#iqamah-toggle-${key}`);
-                const iqCont = iqRow.querySelector(`#iqamah-container-${key}`);
-                iqToggle.addEventListener('change', () => {
-                    iqCont.style.display = iqToggle.checked ? 'block' : 'none';
-                });
-            }
         });
 
+        // Iqamah Reminders Section
+        const settings = JSON.parse(localStorage.getItem('mvPrayerSettings') || '{}');
+        const it = settings.iqamahToggles || {};
+        const io = settings.iqamahOffsets || { ...iqamahDefaults };
+        const iqamahKeys = prayerKeys.filter(k => k !== 'sunrise');
+
+        const masterToggleRow = document.createElement('div');
+        masterToggleRow.className = 'form-check form-switch mb-3 p-3 rounded-3 bg-light-subtle border';
+        masterToggleRow.innerHTML = `
+            <input class="form-check-input" type="checkbox" role="switch" id="iqamah-master-toggle">
+            <label class="form-check-label fw-bold" for="iqamah-master-toggle">Iqamah Reminders</label>
+            <div class="small text-muted mt-1" style="font-size: 0.7rem;">Enable or disable all reminders at once</div>
+        `;
+        iqamahSettingsContainer.appendChild(masterToggleRow);
+        const masterToggle = masterToggleRow.querySelector('#iqamah-master-toggle');
+
+        iqamahKeys.forEach((key) => {
+            const iqEnabled = it[key] || false;
+            const iqMins = io[key] || iqamahDefaults[key];
+            const iqIdx = prayerKeys.indexOf(key);
+
+            const iqRow = document.createElement('div');
+            iqRow.className = 'iqamah-row mb-2 p-2 rounded-3 border-start border-4';
+            iqRow.style.borderStartColor = 'var(--primary-color)';
+            iqRow.innerHTML = `
+                <div class="form-check form-switch mb-1">
+                    <input class="form-check-input iqamah-child-toggle" type="checkbox" role="switch" id="iqamah-toggle-${key}" ${iqEnabled ? 'checked' : ''}>
+                    <label class="form-check-label fw-medium" for="iqamah-toggle-${key}">${prayerNames[iqIdx]} Iqamah</label>
+                </div>
+                <div class="ps-4 mt-1" id="iqamah-container-${key}" style="display: ${iqEnabled ? 'block' : 'none'}">
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="number" id="iqamah-offset-${key}" class="form-control form-control-sm rounded-pill text-center" style="width: 55px;" value="${iqMins}" min="1" max="60">
+                        <span class="small text-muted">mins after Adhan</span>
+                    </div>
+                </div>
+            `;
+            iqamahSettingsContainer.appendChild(iqRow);
+
+            const iqToggle = iqRow.querySelector(`#iqamah-toggle-${key}`);
+            const iqCont = iqRow.querySelector(`#iqamah-container-${key}`);
+
+            iqToggle.addEventListener('change', () => {
+                iqCont.style.display = iqToggle.checked ? 'block' : 'none';
+                updateMasterToggleState();
+            });
+        });
+
+        const childToggles = iqamahSettingsContainer.querySelectorAll('.iqamah-child-toggle');
+
+        function updateMasterToggleState() {
+            const checkedCount = Array.from(childToggles).filter(t => t.checked).length;
+            masterToggle.checked = checkedCount === childToggles.length;
+            masterToggle.indeterminate = checkedCount > 0 && checkedCount < childToggles.length;
+        }
+
+        masterToggle.addEventListener('change', () => {
+            childToggles.forEach(t => {
+                if (t.checked !== masterToggle.checked) {
+                    t.checked = masterToggle.checked;
+                    t.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+
+        updateMasterToggleState();
         checkPWAState();
     }
 
