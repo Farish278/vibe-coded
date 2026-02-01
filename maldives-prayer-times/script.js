@@ -951,9 +951,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 sendNotification(`Time for ${prayerNames[i]}`, `It is now time for ${prayerNames[i]} in ${selectedIsland.island}.`);
             }
 
-            // BEFORE TIME NOTIFICATION
-            if (cachedNotifBefore && currentMins === (prayerTime - cachedNotifBeforeMins)) {
-                sendNotification(`${prayerNames[i]} is about to start`, `${prayerNames[i]} will start in ${cachedNotifBeforeMins} minutes.`);
+            // AFTER TIME NOTIFICATION (Iqamah reminder)
+            if (cachedNotifBefore && currentMins === (prayerTime + cachedNotifBeforeMins)) {
+                sendNotification(`${prayerNames[i]} prayer is about to start.`);
             }
         });
     }
