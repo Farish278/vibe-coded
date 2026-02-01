@@ -909,7 +909,7 @@ document.addEventListener('DOMContentLoaded', () => {
         prayerNotifToggles.innerHTML = '';
         iqamahSettingsContainer.innerHTML = '';
 
-        // Adhan (Adhan) Notifications Section
+        // 1. Adhan (Adhan) Notifications Section
         prayerKeys.forEach((key, i) => {
             const isEnabled = notifs[key] !== false;
             const row = document.createElement('div');
@@ -921,21 +921,25 @@ document.addEventListener('DOMContentLoaded', () => {
             prayerNotifToggles.appendChild(row);
         });
 
-        // Iqamah Reminders Section
-        const settings = JSON.parse(localStorage.getItem('mvPrayerSettings') || '{}');
-        const it = settings.iqamahToggles || {};
-        const io = settings.iqamahOffsets || { ...iqamahDefaults };
+        // 2. Iqamah Section (Inside a Card-like Container)
         const iqamahKeys = prayerKeys.filter(k => k !== 'sunrise');
 
-        const masterToggleRow = document.createElement('div');
-        masterToggleRow.className = 'form-check form-switch mb-3 p-3 rounded-3 bg-light-subtle border';
-        masterToggleRow.innerHTML = `
-            <input class="form-check-input" type="checkbox" role="switch" id="iqamah-master-toggle">
-            <label class="form-check-label fw-bold" for="iqamah-master-toggle">Iqamah Reminders</label>
-            <div class="small text-muted mt-1" style="font-size: 0.7rem;">Enable or disable all reminders at once</div>
+        const iqCard = document.createElement('div');
+        iqCard.className = 'card border-0 bg-light-subtle shadow-sm rounded-4 mb-3';
+        iqCard.innerHTML = `
+            <div class="card-body p-3">
+                <div class="form-check form-switch mb-3 pb-3 border-bottom border-light">
+                    <input class="form-check-input" type="checkbox" role="switch" id="iqamah-master-toggle">
+                    <label class="form-check-label fw-bold" for="iqamah-master-toggle">Iqamah Reminders</label>
+                    <div class="small text-muted" style="font-size: 0.75rem;">Enable or disable all reminders at once</div>
+                </div>
+                <div id="iqamah-children-container"></div>
+            </div>
         `;
-        iqamahSettingsContainer.appendChild(masterToggleRow);
-        const masterToggle = masterToggleRow.querySelector('#iqamah-master-toggle');
+        iqamahSettingsContainer.appendChild(iqCard);
+
+        const masterToggle = iqCard.querySelector('#iqamah-master-toggle');
+        const childrenContainer = iqCard.querySelector('#iqamah-children-container');
 
         iqamahKeys.forEach((key) => {
             const iqEnabled = it[key] || false;
@@ -943,7 +947,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const iqIdx = prayerKeys.indexOf(key);
 
             const iqRow = document.createElement('div');
-            iqRow.className = 'iqamah-row mb-2 p-2 rounded-3 border-start border-4';
+            iqRow.className = 'iqamah-row mb-3 p-2 rounded-3 border-start border-4';
             iqRow.style.borderStartColor = 'var(--primary-color)';
             iqRow.innerHTML = `
                 <div class="form-check form-switch mb-1">
@@ -952,12 +956,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="ps-4 mt-1" id="iqamah-container-${key}" style="display: ${iqEnabled ? 'block' : 'none'}">
                     <div class="d-flex align-items-center gap-2">
-                        <input type="number" id="iqamah-offset-${key}" class="form-control form-control-sm rounded-pill text-center" style="width: 55px;" value="${iqMins}" min="1" max="60">
+                        <input type="number" id="iqamah-offset-${key}" class="form-control form-control-sm rounded-pill text-center iqamah-offset-input" style="width: 55px;" value="${iqMins}" min="1" max="60">
                         <span class="small text-muted">mins after Adhan</span>
                     </div>
                 </div>
             `;
-            iqamahSettingsContainer.appendChild(iqRow);
+            childrenContainer.appendChild(iqRow);
 
             const iqToggle = iqRow.querySelector(`#iqamah-toggle-${key}`);
             const iqCont = iqRow.querySelector(`#iqamah-container-${key}`);
@@ -968,7 +972,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        const childToggles = iqamahSettingsContainer.querySelectorAll('.iqamah-child-toggle');
+        const childToggles = childrenContainer.querySelectorAll('.iqamah-child-toggle');
 
         function updateMasterToggleState() {
             const checkedCount = Array.from(childToggles).filter(t => t.checked).length;
