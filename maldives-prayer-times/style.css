@@ -269,7 +269,36 @@ body {
 
 .color-swatch.active {
     border-color: var(--on-surface-color);
-    box-shadow: 0 0 0 2px var(--surface-color) inset;
+    box-shadow: 0 0 0 2px var(--bs-body-bg), 0 0 0 4px var(--primary-color);
+}
+
+.install-prompt {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background: var(--bs-body-bg);
+    padding: 16px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1050;
+    border: 1px solid var(--primary-color);
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 /* Animations */
