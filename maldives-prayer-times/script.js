@@ -101,25 +101,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isiOS) {
             promptDiv.innerHTML = `
                 <div class="d-flex align-items-center">
-                    <img src="favicon.png" width="40" height="40" class="me-3 rounded shadow-sm">
-                    <div>
+                    <img src="icon-192.png" width="40" height="40" class="me-3 rounded shadow-sm">
+                    <div class="text-start">
                         <div class="fw-bold small">Add to Home Screen</div>
                         <div class="text-muted" style="font-size: 0.75rem;">Tap <span class="material-icons" style="font-size: 14px; vertical-align: middle;">share</span> then "Add to Home Screen"</div>
                     </div>
                 </div>
-                <button id="cancel-install" class="btn btn-sm btn-light rounded-pill px-3">Close</button>
+                <button id="dismiss-install" class="btn btn-sm btn-light rounded-pill px-3">Got it</button>
             `;
         } else {
             promptDiv.innerHTML = `
                 <div class="d-flex align-items-center">
-                    <img src="favicon.png" width="40" height="40" class="me-3 rounded shadow-sm">
-                    <div>
+                    <img src="icon-192.png" width="40" height="40" class="me-3 rounded shadow-sm">
+                    <div class="text-start">
                         <div class="fw-bold small">Install MV Prayer</div>
                         <div class="text-muted" style="font-size: 0.75rem;">Fast, offline access & notifications</div>
                     </div>
                 </div>
                 <div class="d-flex gap-2">
-                    <button id="cancel-install" class="btn btn-sm btn-light rounded-pill px-3">Not Now</button>
+                    <button id="dismiss-install" class="btn btn-sm btn-light rounded-pill px-3">Not Now</button>
                     <button id="accept-install" class="btn btn-sm btn-primary rounded-pill px-3">Install</button>
                 </div>
             `;
@@ -129,57 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const acceptBtn = document.getElementById('accept-install');
         if (acceptBtn) {
             acceptBtn.addEventListener('click', async () => {
-                promptDiv.remove();
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`User response to install prompt: ${outcome}`);
-                    deferredPrompt = null;
-                }
-            });
-        }
-
-        document.getElementById('cancel-install').addEventListener('click', () => {
-            promptDiv.remove();
-        });
-    }
-
-    function showInstallPrompt(isiOS = false) {
-        if (document.querySelector('.install-prompt')) return;
-
-        const promptDiv = document.createElement('div');
-        promptDiv.className = 'install-prompt';
-
-        if (isiOS) {
-            promptDiv.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <img src="icon-192.png" width="40" height="40" class="me-3 rounded shadow-sm">
-                    <div class="text-start">
-                        <div class="fw-bold small">Add to Home Screen</div>
-                        <div class="text-muted" style="font-size: 0.75rem;">Tap <span class="material-icons" style="font-size: 14px; vertical-align: middle;">share</span> then "Add to Home Screen"</div>
-                    </div>
-                </div>
-                <button id="cancel-install" class="btn btn-sm btn-light rounded-pill px-3">Close</button>
-            `;
-        } else {
-            promptDiv.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <img src="icon-192.png" width="40" height="40" class="me-3 rounded shadow-sm">
-                    <div class="text-start">
-                        <div class="fw-bold small">Install MV Prayer</div>
-                        <div class="text-muted" style="font-size: 0.75rem;">Fast, offline access & notifications</div>
-                    </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <button id="cancel-install" class="btn btn-sm btn-light rounded-pill px-3">Not Now</button>
-                    <button id="accept-install" class="btn btn-sm btn-primary rounded-pill px-3">Install</button>
-                </div>
-            `;
-        }
-        document.body.appendChild(promptDiv);
-
-        if (!isiOS && document.getElementById('accept-install')) {
-            document.getElementById('accept-install').addEventListener('click', async () => {
                 if (deferredPrompt) {
                     deferredPrompt.prompt();
                     const { outcome } = await deferredPrompt.userChoice;
@@ -190,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        document.getElementById('cancel-install').addEventListener('click', () => {
+        document.getElementById('dismiss-install').addEventListener('click', () => {
             promptDiv.remove();
         });
     }
@@ -589,8 +538,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
             ctx.fillText(phaseName, rcx, astroStartY + 125); // Moved down slightly
 
-            let sweep1 = phase <= 0.5 ? 1 : 0;
-            let sweep2 = (phase <= 0.25 || (phase > 0.5 && phase <= 0.75)) ? 0 : 1;
+            // Moon drawing logic corrected: sweep1=1 is waxing (right side lit)
+            // Canvas CW/CCW logic is different from SVG
+            let isWaxing = phase <= 0.5;
+            let isTransition = (phase <= 0.25 || (phase > 0.5 && phase <= 0.75));
+
             const mr = 40;
             const mx = rcx;
             const my = astroStartY + 60;
@@ -598,12 +550,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             ctx.save();
             ctx.translate(mx, my);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.beginPath(); ctx.arc(0, 0, mr, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+
+            // 1. Draw the "dark" part of the moon (base circle)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
             ctx.beginPath();
-            ctx.arc(0, 0, mr, Math.PI / 2, -Math.PI / 2, sweep1 === 0);
-            ctx.ellipse(0, 0, Math.abs(xfactor), mr, 0, -Math.PI / 2, Math.PI / 2, sweep2 === 1);
+            ctx.arc(0, 0, mr, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 2. Draw the "lit" part
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.beginPath();
+            // Semi-circle (dominant side)
+            // If waxing: right side (6 to 12 CCW)
+            // If waning: left side (6 to 12 CW)
+            ctx.arc(0, 0, mr, Math.PI / 2, -Math.PI / 2, isWaxing);
+
+            // Terminator (ellipse)
+            // If phase 0-0.25 or 0.5-0.75: needs to add/subtract to right side
+            // If transition: CCW=true draws left side, CCW=false draws right
+            ctx.ellipse(0, 0, Math.abs(xfactor), mr, 0, -Math.PI / 2, Math.PI / 2, !isTransition);
             ctx.fill();
             ctx.restore();
 
