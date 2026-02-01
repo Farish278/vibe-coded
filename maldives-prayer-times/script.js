@@ -5,9 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let settingsModal = null;
     // Cached settings for performance
     let cachedNotificationSettings = {};
-    let cachedNotifBefore = false;
-    let cachedNotifBeforeMins = 15;
     let lastCheckedMinute = -1;
+    let cachedIqamahToggles = {};
+    let cachedIqamahOffsets = {};
+    const iqamahDefaults = { fajr: 15, dhuhr: 12, asr: 12, maghrib: 8, isha: 10 };
     let manifestTemplate = null;
     let currentManifestUrl = null;
 
@@ -35,9 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const pwaNotifSettings = document.getElementById('pwa-notification-settings');
     const prayerNotifToggles = document.getElementById('prayer-notif-toggles');
-    const notifBeforeToggle = document.getElementById('notifBeforeToggle');
-    const notifBeforeContainer = document.getElementById('notifBeforeContainer');
-    const notifBeforeMins = document.getElementById('notifBeforeMins');
+    const iqamahSettingsContainer = document.getElementById('iqamah-settings-container');
 
     const DEFAULT_SHARE_BG = 'snapsaga-sFfZrcEiqtc-unsplash.jpg';
     let customShareBg = localStorage.getItem('customShareBg') || null;
@@ -860,27 +859,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Save notifications
             const notifEnabled = {};
+            const iqamahToggles = {};
+            const iqamahOffsets = {};
+
             prayerKeys.forEach(key => {
                 const el = document.getElementById(`notif-${key}`);
                 if (el) notifEnabled[key] = el.checked;
                 else notifEnabled[key] = true;
+
+                if (key !== 'sunrise') {
+                    const iqT = document.getElementById(`iqamah-toggle-${key}`);
+                    const iqO = document.getElementById(`iqamah-offset-${key}`);
+                    if (iqT) iqamahToggles[key] = iqT.checked;
+                    if (iqO) iqamahOffsets[key] = parseInt(iqO.value) || iqamahDefaults[key];
+                }
             });
 
             updateUI();
-            saveSettings(notifEnabled);
+            saveSettings(notifEnabled, iqamahToggles, iqamahOffsets);
             settingsModal.hide();
         } else alert('Please select an island.');
     });
 
-    function saveSettings(notifEnabled = null) {
+    function saveSettings(notifEnabled = null, iqamahToggles = null, iqamahOffsets = null) {
         if (selectedIsland) {
             const currentSettings = JSON.parse(localStorage.getItem('mvPrayerSettings') || '{}');
-            // Update cached values
+
             cachedNotificationSettings = notifEnabled || currentSettings.notifications || (function () {
                 const df = {}; prayerKeys.forEach(k => df[k] = true); return df;
             })();
-            cachedNotifBefore = notifBeforeToggle.checked;
-            cachedNotifBeforeMins = parseInt(notifBeforeMins.value) || 15;
+
+            cachedIqamahToggles = iqamahToggles || currentSettings.iqamahToggles || {};
+            cachedIqamahOffsets = iqamahOffsets || currentSettings.iqamahOffsets || { ...iqamahDefaults };
 
             const newSettings = {
                 islandId: selectedIsland.islandId,
@@ -888,8 +898,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 darkMode: darkModeToggle.checked,
                 primaryColor: currentPrimaryColor,
                 notifications: cachedNotificationSettings,
-                notifBefore: cachedNotifBefore,
-                notifBeforeMins: cachedNotifBeforeMins
+                iqamahToggles: cachedIqamahToggles,
+                iqamahOffsets: cachedIqamahOffsets
             };
             localStorage.setItem('mvPrayerSettings', JSON.stringify(newSettings));
         }
@@ -897,25 +907,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initNotificationUI(notifs) {
         prayerNotifToggles.innerHTML = '';
+        iqamahSettingsContainer.innerHTML = '';
+
+        const settings = JSON.parse(localStorage.getItem('mvPrayerSettings') || '{}');
+        const it = settings.iqamahToggles || {};
+        const io = settings.iqamahOffsets || { ...iqamahDefaults };
+
         prayerKeys.forEach((key, i) => {
             const isEnabled = notifs[key] !== false; // Default true
             const row = document.createElement('div');
             row.className = 'form-check form-switch mb-2';
             row.innerHTML = `
                 <input class="form-check-input" type="checkbox" role="switch" id="notif-${key}" ${isEnabled ? 'checked' : ''}>
-                <label class="form-check-label fw-medium" for="notif-${key}">${prayerNames[i]} Notification</label>
+                <label class="form-check-label fw-medium" for="notif-${key}">${prayerNames[i]} Adhan</label>
             `;
             prayerNotifToggles.appendChild(row);
-        });
 
-        // Load other notif settings
-        const settings = JSON.parse(localStorage.getItem('mvPrayerSettings') || '{}');
-        notifBeforeToggle.checked = settings.notifBefore || false;
-        notifBeforeMins.value = settings.notifBeforeMins || 15;
-        notifBeforeContainer.style.display = notifBeforeToggle.checked ? 'block' : 'none';
+            if (key !== 'sunrise') {
+                const iqEnabled = it[key] || false;
+                const iqMins = io[key] || iqamahDefaults[key];
 
-        notifBeforeToggle.addEventListener('change', () => {
-            notifBeforeContainer.style.display = notifBeforeToggle.checked ? 'block' : 'none';
+                const iqRow = document.createElement('div');
+                iqRow.className = 'mb-3 pb-2 border-bottom border-light';
+                iqRow.innerHTML = `
+                    <div class="form-check form-switch mb-1">
+                        <input class="form-check-input" type="checkbox" role="switch" id="iqamah-toggle-${key}" ${iqEnabled ? 'checked' : ''}>
+                        <label class="form-check-label small fw-medium text-muted" for="iqamah-toggle-${key}">${prayerNames[i]} Iqamah Reminder</label>
+                    </div>
+                    <div class="ps-4 mt-1" id="iqamah-container-${key}" style="display: ${iqEnabled ? 'block' : 'none'}">
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="number" id="iqamah-offset-${key}" class="form-control form-control-sm rounded-pill" style="width: 60px;" value="${iqMins}" min="1" max="60">
+                            <span class="small text-muted">mins after Adhan</span>
+                        </div>
+                    </div>
+                `;
+                iqamahSettingsContainer.appendChild(iqRow);
+
+                const iqToggle = iqRow.querySelector(`#iqamah-toggle-${key}`);
+                const iqCont = iqRow.querySelector(`#iqamah-container-${key}`);
+                iqToggle.addEventListener('change', () => {
+                    iqCont.style.display = iqToggle.checked ? 'block' : 'none';
+                });
+            }
         });
 
         checkPWAState();
@@ -959,8 +992,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // AFTER TIME NOTIFICATION (Iqamah reminder)
-            if (cachedNotifBefore && currentMins === (prayerTime + cachedNotifBeforeMins)) {
-                sendNotification(`${prayerNames[i]} prayer is about to start.`);
+            const iqEnabled = cachedIqamahToggles[key];
+            const iqOffset = cachedIqamahOffsets[key] || iqamahDefaults[key] || 15;
+            if (key !== 'sunrise' && iqEnabled && currentMins === (prayerTime + iqOffset)) {
+                sendNotification(`${prayerNames[i]} Iqamah`, `${prayerNames[i]} prayer is starting soon (Iqamah reminder).`);
             }
         });
     }
