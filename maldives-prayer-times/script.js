@@ -909,6 +909,10 @@ document.addEventListener('DOMContentLoaded', () => {
         prayerNotifToggles.innerHTML = '';
         iqamahSettingsContainer.innerHTML = '';
 
+        const settings = JSON.parse(localStorage.getItem('mvPrayerSettings') || '{}');
+        const it = settings.iqamahToggles || {};
+        const io = settings.iqamahOffsets || { ...iqamahDefaults };
+
         // 1. Adhan (Adhan) Notifications Section
         prayerKeys.forEach((key, i) => {
             const isEnabled = notifs[key] !== false;
