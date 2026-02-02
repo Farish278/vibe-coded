@@ -178,6 +178,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Load notification settings
             cachedNotificationSettings = settings.notifications || {};
+            // Ensure defaults if missing keys
+            prayerKeys.forEach(k => {
+                if (cachedNotificationSettings[k] === undefined) cachedNotificationSettings[k] = true;
+            });
+
             cachedIqamahToggles = settings.iqamahToggles || {};
             cachedIqamahOffsets = settings.iqamahOffsets || { ...iqamahDefaults };
             initNotificationUI(cachedNotificationSettings);
@@ -877,6 +882,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateUI();
             saveSettings(notifEnabled, iqamahToggles, iqamahOffsets);
+
+            // Request permission if any notification is enabled
+            const anyEnabled = Object.values(notifEnabled).some(v => v) || Object.values(iqamahToggles).some(v => v);
+            if (anyEnabled) {
+                requestNotificationPermission();
+            }
+
             settingsModal.hide();
         } else alert('Please select an island.');
     });
@@ -1036,12 +1048,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const prayerTime = dayTimes[key] + offset;
 
             // EXACT TIME NOTIFICATION
-            if (cachedNotificationSettings[key] && currentMins === prayerTime) {
+            const adhanEnabled = cachedNotificationSettings[key] !== false;
+            if (adhanEnabled && currentMins === prayerTime) {
                 sendNotification(`Time for ${prayerNames[i]}`, `It is now time for ${prayerNames[i]} in ${selectedIsland.island}.`);
             }
 
             // AFTER TIME NOTIFICATION (Iqamah reminder)
-            const iqEnabled = cachedIqamahToggles[key];
+            const iqEnabled = cachedIqamahToggles[key] === true;
             const iqOffset = cachedIqamahOffsets[key] || iqamahDefaults[key] || 15;
             if (key !== 'sunrise' && iqEnabled && currentMins === (prayerTime + iqOffset)) {
                 sendNotification(`${prayerNames[i]} Iqamah`, `${prayerNames[i]} prayer is starting soon (Iqamah reminder).`);
@@ -1114,7 +1127,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Check more frequently to trigger exactly when minute changes
     setInterval(() => {
-        if (selectedDate.toDateString() === new Date().toDateString()) updateUI();
+        const now = new Date();
+        const isSelectedToday = selectedDate.toDateString() === now.toDateString();
+
+        if (isSelectedToday) {
+            updateUI(); // This calls checkNotifications internally
+        } else if (selectedIsland && prayerData) {
+            // Need to check notifications for TODAY even if viewing another day
+            const dayOfYear = getDayOfYear(now);
+            const atollTimes = prayerData.atolls[selectedIsland.atollId];
+            if (atollTimes) {
+                const dayTimes = atollTimes.find(t => t.day === dayOfYear) || atollTimes[0];
+                const offset = selectedIsland.offset || 0;
+                checkNotifications(dayTimes, offset);
+            }
+        }
     }, 10000);
 
     function updateDynamicManifest(color) {
